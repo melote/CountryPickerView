@@ -236,7 +236,11 @@ extension CountryPickerViewController: UISearchResultsUpdating {
             }
             var array = indexArray.filter({ $0.name.lowercased().hasPrefix(text.lowercased()) })
             if array.count == 0 {
-                array = indexArray.filter({ $0.phoneCode.lowercased().hasPrefix(text.lowercased()) })
+                var newText = text.lowercased()
+                if !newText.hasPrefix("+") {
+                    newText = "+" + newText
+                }
+                array = indexArray.filter({ $0.phoneCode.lowercased().hasPrefix(newText) })
             }
             searchResults.append(contentsOf: array)
         }
