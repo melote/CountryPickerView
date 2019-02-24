@@ -140,7 +140,7 @@ extension CountryPickerViewController {
         let identifier = String(describing: CountryTableViewCell.self)
         
         let cell = tableView.dequeueReusableCell(withIdentifier: identifier) as? CountryTableViewCell
-            ?? CountryTableViewCell(style: .default, reuseIdentifier: identifier)
+            ?? CountryTableViewCell(style: .value1, reuseIdentifier: identifier)
         
         let country = isSearchMode ? searchResults[indexPath.row]
             : countries[sectionsTitles[indexPath.section]]![indexPath.row]
@@ -161,6 +161,7 @@ extension CountryPickerViewController {
         }
         cell.accessoryType = country == countryPickerView.selectedCountry ? .checkmark : .none
         cell.separatorInset = .zero
+        cell.detailTextLabel?.text = country.phoneCode
         return cell
     }
     
@@ -222,8 +223,10 @@ extension CountryPickerViewController: UISearchResultsUpdating {
         if let text = searchController.searchBar.text, text.count > 0 {
             isSearchMode = true
             searchResults.removeAll()
-            
             var indexArray = [Country]()
+            self.countries.forEach { (key: String, value: [Country]) in
+                indexArray.append(contentsOf: value)
+            }
             
             if showOnlyPreferredSection && hasPreferredSection,
                 let array = countries[dataSource.preferredCountriesSectionTitle!] {
@@ -231,8 +234,11 @@ extension CountryPickerViewController: UISearchResultsUpdating {
             } else if let array = countries[String(text[text.startIndex])] {
                 indexArray = array
             }
-
-            searchResults.append(contentsOf: indexArray.filter({ $0.name.lowercased().hasPrefix(text.lowercased()) }))
+            var array = indexArray.filter({ $0.name.lowercased().hasPrefix(text.lowercased()) })
+            if array.count == 0 {
+                array = indexArray.filter({ $0.phoneCode.lowercased().hasPrefix(text.lowercased()) })
+            }
+            searchResults.append(contentsOf: array)
         }
         tableView.reloadData()
     }
@@ -271,11 +277,22 @@ class CountryTableViewCell: UITableViewCell {
     
     var flgSize: CGSize = .zero
     
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        self.textLabel?.numberOfLines = 2
+        self.textLabel?.lineBreakMode = .byTruncatingTail
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError()
+    }
+    
     override func layoutSubviews() {
         super.layoutSubviews()
         imageView?.frame.size = flgSize
         imageView?.center.y = contentView.center.y
     }
+    
 }
 
 
